@@ -606,8 +606,24 @@ const title = "~/";
 						return;
 					}
 
-					// Escape closes active search even when focus is on a result link.
+					// In search mode, Escape from a focused result returns to the search input.
 					if (e.key === "Escape" && searchActive) {
+						if (
+							document.activeElement &&
+							document.activeElement.matches(
+								"nav ul li:not(:first-child):not(.search-hidden) a"
+							)
+						) {
+							e.preventDefault();
+							clearNavSelection();
+							searchInput.focus();
+							searchInput.setSelectionRange(
+								searchInput.value.length,
+								searchInput.value.length
+							);
+							return;
+						}
+
 						dismissSearch();
 						return;
 					}
@@ -672,6 +688,23 @@ const title = "~/";
 						// 1-4 jump to first link in that category
 						if (e.key >= "1" && e.key <= "4" && categoryStarts[e.key] !== undefined) {
 							selectNavLink(categoryStarts[e.key]);
+							return;
+						}
+
+						// Continue active search even when focus is on a result link.
+						if (searchActive) {
+							clearNavSelection();
+							if (
+								document.activeElement &&
+								document.activeElement.matches(
+									"nav ul li:not(:first-child):not(.search-hidden) a"
+								)
+							) {
+								document.activeElement.blur();
+							}
+							searchInput.focus();
+							searchInput.value = (searchInput.value || "") + e.key;
+							filterLinks(searchInput.value);
 							return;
 						}
 
