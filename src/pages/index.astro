@@ -527,8 +527,9 @@ const title = "~/";
 
 				searchInput.addEventListener("keydown", function (e) {
 					if (e.key === "Tab") {
-						e.preventDefault();
-						clearNavSelection();
+					e.preventDefault();
+					if (hasHoveredNavItem()) return;
+					clearNavSelection();
 						focusNextVisibleLink(e.shiftKey ? -1 : 1);
 					} else if (e.key === " ") {
 						var selectedBySpace = getSelectedLink();
@@ -559,7 +560,6 @@ const title = "~/";
 					document.querySelectorAll("nav ul li:not(:first-child)")
 				);
 				var navIndex = -1;
-				var suspendedKeyboardIndex = -1;
 
 				// Build category start indices: { "1": 0, "2": 4, ... }
 				var categoryStarts = {};
@@ -573,15 +573,12 @@ const title = "~/";
 					navEl.classList.toggle("keyboard-nav-active", !!active);
 				}
 
-				function clearNavSelection(preserveSuspendedIndex) {
+				function clearNavSelection() {
 					if (navIndex >= 0 && navIndex < navLinks.length) {
 						navLinks[navIndex].classList.remove("nav-selected");
 					}
 					navIndex = -1;
 					setKeyboardNavActive(false);
-					if (!preserveSuspendedIndex) {
-						suspendedKeyboardIndex = -1;
-					}
 				}
 
 				function selectNavLink(i) {
@@ -594,22 +591,10 @@ const title = "~/";
 					navIndex = i;
 					navLinks[navIndex].classList.add("nav-selected");
 					setKeyboardNavActive(true);
-					suspendedKeyboardIndex = -1;
 				}
 
-				function suspendKeyboardSelectionForMouse() {
-					if (searchActive) return;
-					if (navIndex >= 0 && suspendedKeyboardIndex === -1) {
-						suspendedKeyboardIndex = navIndex;
-						clearNavSelection(true);
-					}
-				}
-
-				function restoreKeyboardSelectionAfterMouse() {
-					if (searchActive) return;
-					if (suspendedKeyboardIndex >= 0) {
-						selectNavLink(suspendedKeyboardIndex);
-					}
+				function hasHoveredNavItem() {
+					return !!navEl.querySelector("ul li:not(:first-child):hover");
 				}
 
 				document.addEventListener("keydown", function (e) {
@@ -648,6 +633,7 @@ const title = "~/";
 					// Tab / Shift+Tab for navigation cycling
 					if (e.key === "Tab") {
 						e.preventDefault();
+						if (hasHoveredNavItem()) return;
 						if (searchActive) {
 							clearNavSelection();
 							focusNextVisibleLink(e.shiftKey ? -1 : 1);
@@ -699,11 +685,19 @@ const title = "~/";
 				});
 
 				navEl.addEventListener("mousemove", function () {
-					suspendKeyboardSelectionForMouse();
-				});
-
-				navEl.addEventListener("mouseleave", function () {
-					restoreKeyboardSelectionAfterMouse();
+					if (hasHoveredNavItem()) {
+						if (navIndex >= 0) {
+							clearNavSelection();
+						}
+						if (
+							document.activeElement &&
+							document.activeElement.matches(
+								"nav ul li:not(:first-child):not(.search-hidden) a"
+							)
+						) {
+							document.activeElement.blur();
+						}
+					}
 				});
 
 				// --- Theme toggle ---
