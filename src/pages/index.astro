@@ -477,12 +477,30 @@ const title = "~/";
 					});
 				}
 
+				function getSelectedLink() {
+					var focused = document.activeElement;
+					if (
+						focused &&
+						focused.matches("nav ul li:not(:first-child):not(.search-hidden) a")
+					) {
+						return focused;
+					}
+
+					return document.querySelector("nav ul li.nav-selected:not(.search-hidden) a");
+				}
+
 				searchInput.addEventListener("input", function () {
 					filterLinks(searchInput.value);
 				});
 
 				searchInput.addEventListener("keydown", function (e) {
-					if (e.key === "Enter") {
+					if (e.key === " ") {
+						var selectedBySpace = getSelectedLink();
+						if (selectedBySpace) {
+							e.preventDefault();
+							window.location.href = selectedBySpace.href;
+						}
+					} else if (e.key === "Enter") {
 						e.preventDefault();
 						var visible = document.querySelectorAll(
 							"nav ul li:not(:first-child):not(.search-hidden) a"
@@ -548,6 +566,16 @@ const title = "~/";
 						return;
 					}
 
+					// Space opens selected/focused link (left-hand alternative to Enter)
+					if (e.key === " ") {
+						var selected = getSelectedLink();
+						if (selected) {
+							e.preventDefault();
+							window.location.href = selected.href;
+							return;
+						}
+					}
+
 					// Tab / Shift+Tab for navigation cycling
 					if (e.key === "Tab") {
 						e.preventDefault();
@@ -572,7 +600,13 @@ const title = "~/";
 						return;
 					}
 
-					if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+					if (
+						e.key.length === 1 &&
+						e.key !== " " &&
+						!e.ctrlKey &&
+						!e.metaKey &&
+						!e.altKey
+					) {
 						e.preventDefault();
 
 						// 1-4 jump to first link in that category
