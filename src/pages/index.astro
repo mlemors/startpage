@@ -466,6 +466,13 @@ const title = "~/";
 					searchEl.classList.remove("active");
 					searchInput.value = "";
 					filterLinks("");
+					if (
+						document.activeElement &&
+						document.activeElement !== document.body &&
+						typeof document.activeElement.blur === "function"
+					) {
+						document.activeElement.blur();
+					}
 				}
 
 				function filterLinks(query) {
@@ -492,12 +499,38 @@ const title = "~/";
 					return document.querySelector("nav ul li.nav-selected:not(.search-hidden) a");
 				}
 
+				function getVisibleLinks() {
+					return Array.prototype.slice.call(
+						document.querySelectorAll("nav ul li:not(:first-child):not(.search-hidden) a")
+					);
+				}
+
+				function focusNextVisibleLink(direction) {
+					var visible = getVisibleLinks();
+					if (visible.length === 0) return false;
+
+					var active = document.activeElement;
+					var idx = visible.indexOf(active);
+					if (idx === -1) {
+						idx = direction > 0 ? -1 : 0;
+					}
+
+					var nextIdx = (idx + direction + visible.length) % visible.length;
+					var nextLink = visible[nextIdx];
+					nextLink.focus();
+					return true;
+				}
+
 				searchInput.addEventListener("input", function () {
 					filterLinks(searchInput.value);
 				});
 
 				searchInput.addEventListener("keydown", function (e) {
-					if (e.key === " ") {
+					if (e.key === "Tab") {
+						e.preventDefault();
+						clearNavSelection();
+						focusNextVisibleLink(e.shiftKey ? -1 : 1);
+					} else if (e.key === " ") {
 						var selectedBySpace = getSelectedLink();
 						if (selectedBySpace) {
 							e.preventDefault();
@@ -561,6 +594,12 @@ const title = "~/";
 						return;
 					}
 
+					// Escape closes active search even when focus is on a result link.
+					if (e.key === "Escape" && searchActive) {
+						dismissSearch();
+						return;
+					}
+
 					// "/" activates search
 					if (e.key === "/") {
 						e.preventDefault();
@@ -582,6 +621,11 @@ const title = "~/";
 					// Tab / Shift+Tab for navigation cycling
 					if (e.key === "Tab") {
 						e.preventDefault();
+						if (searchActive) {
+							clearNavSelection();
+							focusNextVisibleLink(e.shiftKey ? -1 : 1);
+							return;
+						}
 						if (navIndex < 0) {
 							selectNavLink(e.shiftKey ? navLinks.length - 1 : 0);
 						} else {
