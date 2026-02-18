@@ -463,7 +463,6 @@ const title = "~/";
 					searchEl.classList.remove("active");
 					searchInput.value = "";
 					filterLinks("");
-					clearNavSelection();
 				}
 
 				function filterLinks(query) {
@@ -562,23 +561,6 @@ const title = "~/";
 					navLinks[navIndex].classList.add("nav-selected");
 				}
 
-				function selectSpecificNavLink(li) {
-					if (!li) return;
-					var idx = navLinks.indexOf(li);
-					if (idx === -1) return;
-					if (navIndex >= 0 && navIndex < navLinks.length) {
-						navLinks[navIndex].classList.remove("nav-selected");
-					}
-					navIndex = idx;
-					navLinks[navIndex].classList.add("nav-selected");
-				}
-
-				function getVisibleNavLinks() {
-					return Array.prototype.slice.call(
-						document.querySelectorAll("nav ul li:not(:first-child):not(.search-hidden)")
-					);
-				}
-
 				document.addEventListener("keydown", function (e) {
 					// Ignore if inside an input/textarea
 					if (
@@ -658,43 +640,14 @@ const title = "~/";
 					"wheel",
 					function (e) {
 						// Ignore wheel-driven selection while typing in inputs
-						var isInputTarget =
+						if (
 							e.target.tagName === "INPUT" ||
-							e.target.tagName === "TEXTAREA";
-						if (isInputTarget && !searchActive) {
+							e.target.tagName === "TEXTAREA"
+						) {
 							return;
 						}
 
 						if (e.deltaY === 0) return;
-
-						if (searchActive) {
-							e.preventDefault();
-							var visibleNavLinks = getVisibleNavLinks();
-							if (visibleNavLinks.length === 0) return;
-
-							var current = navIndex >= 0 ? navLinks[navIndex] : null;
-							var currentVisibleIndex = visibleNavLinks.indexOf(current);
-							if (currentVisibleIndex === -1 && document.activeElement) {
-								var focusedLi = document.activeElement.closest("li");
-								currentVisibleIndex = visibleNavLinks.indexOf(focusedLi);
-							}
-
-							var nextVisibleIndex;
-							if (currentVisibleIndex === -1) {
-								nextVisibleIndex = e.deltaY > 0 ? 0 : visibleNavLinks.length - 1;
-							} else {
-								nextVisibleIndex = Math.max(
-									0,
-									Math.min(
-										currentVisibleIndex + (e.deltaY > 0 ? 1 : -1),
-										visibleNavLinks.length - 1
-									)
-								);
-							}
-
-							selectSpecificNavLink(visibleNavLinks[nextVisibleIndex]);
-							return;
-						}
 
 						e.preventDefault();
 
