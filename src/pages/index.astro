@@ -123,6 +123,10 @@ const title = "~/";
 				color: var(--color-accent-mauve);
 			}
 
+			.h1-line {
+				display: inline;
+			}
+
 			a {
 				color: inherit;
 				text-decoration: none;
@@ -348,6 +352,15 @@ const title = "~/";
 					margin: 0;
 				}
 
+				h1 {
+					padding-top: 2rem;
+					line-height: 1.15;
+				}
+
+				.h1-line {
+					display: block;
+				}
+
 				img,
 				[data-theme="light"] .logo-light {
 					display: none;
@@ -376,7 +389,7 @@ const title = "~/";
 		<button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme"
 		></button>
 		<nav>
-			<h1>startpage『mlemors』</h1>
+			<h1><span class="h1-line">startpage</span><span class="h1-line">『mlemors』</span></h1>
 			<div class="search" id="search">
 				<span class="search-prompt">$ </span>
 				<input
