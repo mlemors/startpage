@@ -549,6 +549,18 @@ const title = "~/";
 					navLinks[navIndex].classList.add("nav-selected");
 				}
 
+				function selectNavLinkClamped(i) {
+					var len = navLinks.length;
+					if (len === 0) return;
+
+					if (navIndex >= 0 && navIndex < len) {
+						navLinks[navIndex].classList.remove("nav-selected");
+					}
+
+					navIndex = Math.max(0, Math.min(i, len - 1));
+					navLinks[navIndex].classList.add("nav-selected");
+				}
+
 				document.addEventListener("keydown", function (e) {
 					// Ignore if inside an input/textarea
 					if (
@@ -623,6 +635,31 @@ const title = "~/";
 						return;
 					}
 				});
+
+				document.addEventListener(
+					"wheel",
+					function (e) {
+						// Ignore wheel-driven selection while typing in inputs
+						if (
+							e.target.tagName === "INPUT" ||
+							e.target.tagName === "TEXTAREA"
+						) {
+							return;
+						}
+
+						if (e.deltaY === 0) return;
+
+						e.preventDefault();
+
+						if (navIndex < 0) {
+							selectNavLinkClamped(e.deltaY > 0 ? 0 : navLinks.length - 1);
+							return;
+						}
+
+						selectNavLinkClamped(navIndex + (e.deltaY > 0 ? 1 : -1));
+					},
+					{ passive: false }
+				);
 
 				// --- Theme toggle ---
 				var toggleBtn = document.getElementById("theme-toggle");
