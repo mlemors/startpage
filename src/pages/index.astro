@@ -573,6 +573,8 @@ const title = "~/";
 					}
 
 					if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+						e.preventDefault();
+
 						// 1-4 jump to first link in that category
 						if (e.key >= "1" && e.key <= "4" && categoryStarts[e.key] !== undefined) {
 							selectNavLink(categoryStarts[e.key]);
