@@ -178,11 +178,11 @@ const title = "~/";
 				color: var(--color-accent-mauve);
 			}
 
-			li:not(:first-child):hover {
+			nav:not(.keyboard-nav-active) li:not(:first-child):hover {
 				transform: translateX(4px);
 			}
 
-			li:not(:first-child):hover a::before {
+			nav:not(.keyboard-nav-active) li:not(:first-child):hover a::before {
 				opacity: 1;
 			}
 
@@ -554,10 +554,12 @@ const title = "~/";
 				});
 
 				// --- Keyboard navigation ---
+				var navEl = document.querySelector("nav");
 				var navLinks = Array.prototype.slice.call(
 					document.querySelectorAll("nav ul li:not(:first-child)")
 				);
 				var navIndex = -1;
+				var suspendedKeyboardIndex = -1;
 
 				// Build category start indices: { "1": 0, "2": 4, ... }
 				var categoryStarts = {};
@@ -567,11 +569,19 @@ const title = "~/";
 					idx += ul.querySelectorAll("li:not(:first-child)").length;
 				});
 
-				function clearNavSelection() {
+				function setKeyboardNavActive(active) {
+					navEl.classList.toggle("keyboard-nav-active", !!active);
+				}
+
+				function clearNavSelection(preserveSuspendedIndex) {
 					if (navIndex >= 0 && navIndex < navLinks.length) {
 						navLinks[navIndex].classList.remove("nav-selected");
 					}
 					navIndex = -1;
+					setKeyboardNavActive(false);
+					if (!preserveSuspendedIndex) {
+						suspendedKeyboardIndex = -1;
+					}
 				}
 
 				function selectNavLink(i) {
@@ -583,6 +593,23 @@ const title = "~/";
 					}
 					navIndex = i;
 					navLinks[navIndex].classList.add("nav-selected");
+					setKeyboardNavActive(true);
+					suspendedKeyboardIndex = -1;
+				}
+
+				function suspendKeyboardSelectionForMouse() {
+					if (searchActive) return;
+					if (navIndex >= 0 && suspendedKeyboardIndex === -1) {
+						suspendedKeyboardIndex = navIndex;
+						clearNavSelection(true);
+					}
+				}
+
+				function restoreKeyboardSelectionAfterMouse() {
+					if (searchActive) return;
+					if (suspendedKeyboardIndex >= 0) {
+						selectNavLink(suspendedKeyboardIndex);
+					}
 				}
 
 				document.addEventListener("keydown", function (e) {
@@ -669,6 +696,14 @@ const title = "~/";
 						filterLinks(e.key);
 						return;
 					}
+				});
+
+				navEl.addEventListener("mousemove", function () {
+					suspendKeyboardSelectionForMouse();
+				});
+
+				navEl.addEventListener("mouseleave", function () {
+					restoreKeyboardSelectionAfterMouse();
 				});
 
 				// --- Theme toggle ---
